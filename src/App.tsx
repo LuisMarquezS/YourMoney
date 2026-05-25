@@ -43,6 +43,7 @@ import { clearState, loadState, saveState } from "./services/storage";
 import type { Account, AuditEntry, FinanceState, Person, Transaction, TransactionDraft, TransactionType } from "./types";
 import { accountDistribution, filterTransactions, getTotals, monthlySeries, personStats, recalculatePeople, sumByType } from "./utils/finance";
 import { downloadFile, importedDate, money, numberValue, readableDate, today } from "./utils/format";
+import { createId } from "./utils/id";
 
 type View = "dashboard" | "transactions" | "people" | "accounts" | "metrics" | "import" | "settings";
 type SortKey = "date" | "amount" | "person";
@@ -110,7 +111,7 @@ function App() {
   const addAudit = (entry: Omit<AuditEntry, "id" | "at">) => {
     setState((current) => ({
       ...current,
-      audit: [{ ...entry, id: crypto.randomUUID(), at: new Date().toISOString() }, ...current.audit].slice(0, 80),
+      audit: [{ ...entry, id: createId(), at: new Date().toISOString() }, ...current.audit].slice(0, 80),
     }));
   };
 
@@ -136,7 +137,7 @@ function App() {
       }));
       addAudit({ action: "edited", entity: "transaction", entityId: editing.id, personId: draft.personId, summary: `Editado: ${draft.description}` });
     } else {
-      const transaction: Transaction = { ...draft, amount, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+      const transaction: Transaction = { ...draft, amount, id: createId(), createdAt: new Date().toISOString() };
       setState((current) => ({ ...current, transactions: [transaction, ...current.transactions] }));
       addAudit({ action: "created", entity: "transaction", entityId: transaction.id, personId: draft.personId, summary: `Creado: ${draft.description}` });
     }
@@ -168,7 +169,7 @@ function App() {
   };
 
   const duplicateTransaction = (transaction: Transaction) => {
-    const copy: Transaction = { ...transaction, id: crypto.randomUUID(), date: today(), createdAt: new Date().toISOString(), updatedAt: undefined };
+    const copy: Transaction = { ...transaction, id: createId(), date: today(), createdAt: new Date().toISOString(), updatedAt: undefined };
     setState((current) => ({ ...current, transactions: [copy, ...current.transactions] }));
     addAudit({ action: "created", entity: "transaction", entityId: copy.id, personId: copy.personId, summary: `Duplicado: ${copy.description}` });
   };
@@ -185,7 +186,7 @@ function App() {
       addAudit({ action: "edited", entity: "person", entityId: person.id, personId: person.id, summary: `Persona editada: ${name}` });
     } else {
       const newPerson: Person = {
-        id: crypto.randomUUID(),
+        id: createId(),
         name,
         initialBalance,
         currentBalance: initialBalance,
@@ -215,7 +216,7 @@ function App() {
     } else {
       setState((current) => ({
         ...current,
-        accounts: [...current.accounts, { id: crypto.randomUUID(), name, type, currency, createdAt: new Date().toISOString() }],
+        accounts: [...current.accounts, { id: createId(), name, type, currency, createdAt: new Date().toISOString() }],
       }));
     }
   };
@@ -955,7 +956,7 @@ function ImportExportView({
         const firstRow = preview.find((row) => String(row.Persona ?? "").toLowerCase() === name.toLowerCase());
         const initialBalance = numberValue(firstRow?.__initialBalance ?? existing?.initialBalance ?? 0);
         const person = {
-          id: existing?.id ?? crypto.randomUUID(),
+          id: existing?.id ?? createId(),
           name,
           initialBalance,
           currentBalance: initialBalance,
@@ -972,7 +973,7 @@ function ImportExportView({
       const transactions: Transaction[] = preview.map((row) => {
         const person = peopleByName.get(String(row.Persona ?? "").toLowerCase());
         return {
-          id: crypto.randomUUID(),
+          id: createId(),
           personId: person?.id ?? "",
           type: normalizeType(row.Tipo),
           amount: Math.abs(numberValue(row.Monto)),
@@ -999,7 +1000,7 @@ function ImportExportView({
         const existing = state.people.find((person) => person.name.toLowerCase() === String(row.Persona ?? "").toLowerCase());
         const initialBalance = numberValue(row.Saldo ?? row["Saldo actual"]);
         return {
-          id: existing?.id ?? crypto.randomUUID(),
+          id: existing?.id ?? createId(),
           name: String(row.Persona ?? "Sin nombre"),
           initialBalance,
           currentBalance: initialBalance,
@@ -1016,7 +1017,7 @@ function ImportExportView({
       const personNameValue = String(row.Persona ?? row.persona ?? "");
       const person = state.people.find((item) => item.name.toLowerCase() === personNameValue.toLowerCase()) ?? state.people[0];
       return {
-        id: crypto.randomUUID(),
+        id: createId(),
         personId: person?.id ?? "",
         type: normalizeType(row.Tipo ?? row.tipo),
         amount: Math.abs(numberValue(row.Monto ?? row.monto)),
@@ -1407,7 +1408,7 @@ function uniqueDays(transactions: Transaction[]) {
 }
 
 function auditImport(audit: AuditEntry[], summary: string): AuditEntry[] {
-  return [{ id: crypto.randomUUID(), action: "imported", entity: "backup", entityId: "import", at: new Date().toISOString(), summary }, ...audit];
+  return [{ id: createId(), action: "imported", entity: "backup", entityId: "import", at: new Date().toISOString(), summary }, ...audit];
 }
 
 function workbookToLegacyRows(workbook: XLSX.WorkBook): ImportPreviewRow[] {
@@ -1543,7 +1544,7 @@ function ensureAccount(accounts: Account[], name: string) {
   return [
     ...accounts,
     {
-      id: crypto.randomUUID(),
+      id: createId(),
       name,
       type: name.toLowerCase() === "binance" ? "binance" : "other",
       currency: "USD",

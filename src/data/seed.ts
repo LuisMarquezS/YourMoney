@@ -1,4 +1,5 @@
 import type { Account, Person } from "../types";
+import { createId } from "../utils/id";
 
 const now = new Date().toISOString();
 const colors = ["#2F80ED", "#27AE60", "#F2994A", "#9B51E0", "#EB5757", "#00A3A3", "#6B7280", "#D946EF", "#0F766E"];
@@ -15,7 +16,7 @@ export const initialPeople: Person[] = [
   { name: "Mario", initialBalance: 387.06 },
 ].map((person, index) => ({
   ...person,
-  id: crypto.randomUUID(),
+  id: createId(),
   currentBalance: person.initialBalance,
   color: colors[index],
   isActive: true,
@@ -23,9 +24,9 @@ export const initialPeople: Person[] = [
 }));
 
 export const initialAccounts: Account[] = [
-  { id: crypto.randomUUID(), name: "Binance", type: "binance", currency: "USD", createdAt: now },
-  { id: crypto.randomUUID(), name: "Banco", type: "bank", currency: "USD", createdAt: now },
-  { id: crypto.randomUUID(), name: "Efectivo", type: "cash", currency: "USD", createdAt: now },
+  { id: createId(), name: "Binance", type: "binance", currency: "USD", createdAt: now },
+  { id: createId(), name: "Banco", type: "bank", currency: "USD", createdAt: now },
+  { id: createId(), name: "Efectivo", type: "cash", currency: "USD", createdAt: now },
 ];
 
 export const incomeCategories = ["Deposito", "Pago recibido", "Transferencia recibida", "Ajuste positivo", "Otro ingreso"];
